@@ -11,6 +11,12 @@ const connectDB = require('./config/db');
 const userRoutes = require('./routes/userRoute');
 app.use('/api/user', userRoutes);
 
+const userAuthRoutes = require('./routes/userAuth');
+app.use('/api/login', userAuthRoutes);
+
+const uploadRoutes = require('./routes/uploadRoute');
+app.use('/api/upload', uploadRoutes);
+
 const startServer = async () => {  
     try {
         await connectDB();
