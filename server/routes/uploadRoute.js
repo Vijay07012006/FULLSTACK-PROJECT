@@ -1,83 +1,92 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-// console.log(multer);
 const User = require('../models/User');
 
-// const uploads = multer.diskStorage({
-//     destination: function (req, file, cb) {
-//         cb(null, 'uploads/');
-//         // console.log("storage"+cb);
-        
-//     },
-//     filename: function (req, file, cb) {
-//         cb(null, Date.now() + '-' + file.originalname);
-//     }
-// });
-
+// Storage setup
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'uploads/');
+        cb(null, 'uploads/'); // Make sure this directory exists and is writable. This is where the uploaded files will be stored on the server. You can customize this path as needed, but ensure that it has the appropriate permissions for file storage.
     },
     filename: function (req, file, cb) {
         cb(null, Date.now() + '-' + file.originalname);
     }
 });
 
-const upload = multer({ storage: storage });
+const uploads = multer({ storage: storage }); // Multer middleware is configured to use the defined storage settings. This middleware will handle the parsing of multipart/form-data requests and manage the file uploads according to the specified storage configuration.
 
-router.post('/', upload.single('picture'), async (req, res) => {
+// UPDATE PROFILE PICTURE
+router.put('/:id', uploads.single('picture'), async (req, res) => {
     try {
-        const { id } = req.body;
-        const picture = req.file.path; // Access the uploaded file's path
+        const { id } = req.params;
+
+        // Check id
+        if (!id) {
+            return res.status(400).json({ message: "ID is required" });
+        }
+
+        // Check file
+        if (!req.file) {
+            return res.status(400).json({ message: "Picture is required" });
+        }
+
+        const picture = req.file.path;
+
         const user = await User.findByIdAndUpdate(
             id,
             { picture },
             { new: true }
         );
+
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: "User not found" });
         }
-        res.status(200).json({ message: "Picture uploaded successfully", user });
+
+        res.status(200).json({
+            message: "Picture updated successfully",
+            user
+        });
+
     } catch (err) {
-        res.json({ message: err.message });
-    }
+        res.status(500).json({ message: err.message });
+    }  
 });
 
-router.put('/', upload.single('picture'), async (req, res) => {
+router.post('/' , uploads.single('picture'), async (req, res) => {
+    // res.json(req.file);
     try {
         const { id } = req.body;
-        const picture = req.file.path; // Access the uploaded file's path
+
+        // Check id
+        if (!id) {
+            return res.status(400).json({ message: "ID is required" });
+        }
+
+        // Check file
+        if (!req.file) {
+            return res.status(400).json({ message: "Picture is required" });
+        }
+
+        const picture = req.file.path;
+
         const user = await User.findByIdAndUpdate(
             id,
             { picture },
             { new: true }
         );
+
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: "User not found" });
         }
-        res.status(200).json({ message: "Picture updated successfully", user });
+
+        res.status(200).json({
+            message: "Picture updated successfully",
+            user
+        });
+
     } catch (err) {
-        res.json({ message: err.message });
+        res.status(500).json({ message: err.message });
     }
 });
 
-// router.put('/' , upload.single('picture'), async(req , res)=>{
-//     try{
-//         const { id, picture } = req.body;
-//         const user = await User.findByIdAndUpdate(
-//             id,
-//             { picture },
-//             { new: true }
-//         );
-//         if (!user) {
-//             return res.status(404).json({ message: 'User not found' });
-//         }
-//         res.status(200).json({message:"Picture updated successfully", user});
-//     }
-//     catch(err){
-//         res.json({message:err.message})
-//     }
-// });
-
-module.exports= router;
+module.exports = router;
